@@ -7,7 +7,6 @@ import java.rmi.registry.LocateRegistry;
 
 public class Main {
 public static void main(String[] args) throws RemoteException, MalformedURLException {
-		System.setProperty("java.security.policy", "file:./rmipolicy.policy");
 		System.setProperty("java.rmi.server.hostname","127.0.0.1");
 		
 		TempServerInterface natalServer = new NatalServer();

@@ -29,11 +29,11 @@ public class NatalServer extends UnicastRemoteObject implements TempServerInterf
 	protected NatalServer() throws RemoteException {
 		super();	
 		
-		new Notify().start();
+		new MonitorTemperatura().start();
 	}
 
 	@Override
-	public void request(Request req) throws RemoteException {
+	public void monitorarTemperatura(Request req) throws RemoteException {
 		requests.add(req);
 		
 		System.out.println("Nova requisição registrada no servidor de " + NAME);
@@ -69,7 +69,7 @@ public class NatalServer extends UnicastRemoteObject implements TempServerInterf
 		}
 	}
 	
-	private class Notify extends Thread{
+	private class MonitorTemperatura extends Thread{
 		
 		public void run() {
 			
@@ -135,7 +135,9 @@ public class NatalServer extends UnicastRemoteObject implements TempServerInterf
 								break;
 							case INTERVALO:
 								msg += " está entre " + r.getX() + " e " + r.getY();
-								if(r.getX() > temp && r.getY() < temp) {
+								int maiorTemp = Math.max(r.getX(), r.getY());
+								int menorTemp = Math.min(r.getX(), r.getY());
+								if(maiorTemp > temp && menorTemp < temp) {
 									try {
 										r.getCliente().notificar(new Message(msg));
 									} catch (RemoteException e) {

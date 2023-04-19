@@ -12,7 +12,6 @@ import br.ufrn.monitoramentotemperatura.model.Request;
 public class Main {
 public static void main(String[] args) throws MalformedURLException, RemoteException, NotBoundException {
 		
-		System.setProperty("java.security.policy", "file:./rmipolicy.policy");
 	
 		TempServerInterface natalServer = (TempServerInterface) Naming.lookup("rmi://127.0.0.1:1098/TemperaturaNatalServer");
 		
@@ -27,6 +26,7 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 		
 		TempServerInterface cairoServer = (TempServerInterface) 
 				Naming.lookup("rmi://127.0.0.1:1102/TemperaturaCairoServer");
+				
 
 		TempClientInterface client = new TempClient();
 		Scanner scanner = new Scanner(System.in);
@@ -54,11 +54,18 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 						System.out.println("Digite a opção de monitoramento:");
 						System.out.println("\n 1 - Menor \n 2 - Maior \n 3 - Igual \n 4 - Intervalo");
 						opcaoNum = scanner.nextInt() - 1;
-						x = scanner.nextInt();
+						
 						if(opcaoNum == 3) {
+							System.out.print("Digite o primeiro valor desejado desejado (Em celsius):");
+							x = scanner.nextInt();
 							y = scanner.nextInt();
+						} else {
+							System.out.print("Digite o segundo valor desejado desejado (Em celsius):");
+							x = scanner.nextInt();
 						}
 						break;
+					default:
+						System.out.println("Opção inválida");
 				 }
 				
 				 switch (cidadeNum) {
@@ -66,7 +73,7 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 						if(consultar) {
 							natalServer.consultarTemperatura(client);
 						} else {
-							natalServer.request(new Request(Operacao.values()[opcaoNum], x,y, client));
+							natalServer.monitorarTemperatura(new Request(Operacao.values()[opcaoNum], x,y, client));
 						}
 						break;
 						
@@ -74,14 +81,14 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 						if(consultar) {
 							londresServer.consultarTemperatura(client);
 						} else {
-							londresServer.request(new Request(Operacao.values()[opcaoNum], x,y, client));
+							londresServer.monitorarTemperatura(new Request(Operacao.values()[opcaoNum], x,y, client));
 						}
 						break;
 					case 3:
 						if(consultar) {
 							novaIorqueServer.consultarTemperatura(client);
 						} else {
-							novaIorqueServer.request(new Request(Operacao.values()[opcaoNum], x,y, client));
+							novaIorqueServer.monitorarTemperatura(new Request(Operacao.values()[opcaoNum], x,y, client));
 						}
 						break;
 						
@@ -89,7 +96,7 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 						if(consultar) {
 							osloServer.consultarTemperatura(client);
 						} else {
-							osloServer.request(new Request(Operacao.values()[opcaoNum], x,y, client));
+							osloServer.monitorarTemperatura(new Request(Operacao.values()[opcaoNum], x,y, client));
 						}
 						break;
 						
@@ -97,9 +104,11 @@ public static void main(String[] args) throws MalformedURLException, RemoteExcep
 						if(consultar) {
 							cairoServer.consultarTemperatura(client);
 						} else {
-							cairoServer.request(new Request(Operacao.values()[opcaoNum], x,y, client));
+							cairoServer.monitorarTemperatura(new Request(Operacao.values()[opcaoNum], x,y, client));
 						}
 						break;
+					default:
+						System.out.println("Opção inválida");
 						
 				  }
 				

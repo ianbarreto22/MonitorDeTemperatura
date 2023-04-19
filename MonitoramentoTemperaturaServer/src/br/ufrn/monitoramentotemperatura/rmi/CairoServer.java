@@ -29,11 +29,11 @@ public class CairoServer extends UnicastRemoteObject implements TempServerInterf
 	protected CairoServer() throws RemoteException {
 		super();	
 		
-		new Notify().start();
+		new MonitorTemperatura().start();
 	}
 
 	@Override
-	public void request(Request req) throws RemoteException {
+	public void monitorarTemperatura(Request req) throws RemoteException {
 		requests.add(req);
 		
 		System.out.println("Nova requisição registrada no servidor de " + NAME);
@@ -69,95 +69,97 @@ public class CairoServer extends UnicastRemoteObject implements TempServerInterf
 		}
 	}
 	
-	private class Notify extends Thread{
-		
-		public void run() {
+	private class MonitorTemperatura extends Thread{
 			
-			for(;;) {
-								
-				if(requests.size() > 0) {
-					
-					
-					Integer temp = null;
-					HttpRequest request = HttpRequest.newBuilder()
-							.uri(URI.create("https://api.openweathermap.org/data/2.5/weather?lat="+LAT+"&lon="+LON+"&appid=" + API_KEY + "&units=metric"))
-							.method("GET", HttpRequest.BodyPublishers.noBody())
-							.build();
-					try {
-						HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-						String json = response.body();
+			public void run() {
+				
+				for(;;) {
+									
+					if(requests.size() > 0) {
 						
-						JsonReader reader = Json.createReader(new StringReader(json));
-				        JsonObject jsonObject = reader.readObject();
-				        reader.close();
-
-				        JsonObject main = jsonObject.getJsonObject("main");
-				        temp = main.getJsonNumber("temp").intValue();
-				        System.out.println("Temperatura em "+ NAME +": " + temp);
-				        
-					} catch (IOException | InterruptedException e1) {
-						e1.printStackTrace();
-					}
-					
-					if(temp != null) {
-						for(Request r : requests) {
-							String msg = "A temperatura em " + NAME;
-							switch(r.getOperacao()) {
-							case IGUAL:
-								msg += " está igual a ";
-								if(r.getX() == temp) {
-									try {
-										r.getCliente().notificar(new Message(msg + temp));
-									} catch (RemoteException e) {
-										e.printStackTrace();
+						
+						Integer temp = null;
+						HttpRequest request = HttpRequest.newBuilder()
+								.uri(URI.create("https://api.openweathermap.org/data/2.5/weather?lat="+LAT+"&lon="+LON+"&appid=" + API_KEY + "&units=metric"))
+								.method("GET", HttpRequest.BodyPublishers.noBody())
+								.build();
+						try {
+							HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+							String json = response.body();
+							
+							JsonReader reader = Json.createReader(new StringReader(json));
+					        JsonObject jsonObject = reader.readObject();
+					        reader.close();
+	
+					        JsonObject main = jsonObject.getJsonObject("main");
+					        temp = main.getJsonNumber("temp").intValue();
+					        System.out.println("Temperatura em "+ NAME +": " + temp);
+					        
+						} catch (IOException | InterruptedException e1) {
+							e1.printStackTrace();
+						}
+						
+						if(temp != null) {
+							for(Request r : requests) {
+								String msg = "A temperatura em " + NAME;
+								switch(r.getOperacao()) {
+								case IGUAL:
+									msg += " está igual a ";
+									if(r.getX() == temp) {
+										try {
+											r.getCliente().notificar(new Message(msg + temp));
+										} catch (RemoteException e) {
+											e.printStackTrace();
+										}
 									}
-								}
-								break;
-							case MAIOR:
-								msg += " está maior que ";
-								if(r.getX() > temp) {
-									try {
-										r.getCliente().notificar(new Message(msg + r.getX()));
-									} catch (RemoteException e) {
-										e.printStackTrace();
+									break;
+								case MAIOR:
+									msg += " está maior que ";
+									if(r.getX() < temp) {
+										try {
+											r.getCliente().notificar(new Message(msg + r.getX()));
+										} catch (RemoteException e) {
+											e.printStackTrace();
+										}
 									}
-								}
-								break;
-							case MENOR:
-								msg += " está menor que ";
-								if(r.getX() < temp) {
-									try {
-										r.getCliente().notificar(new Message(msg + r.getX()));
-									} catch (RemoteException e) {
-										e.printStackTrace();
+									break;
+								case MENOR:
+									msg += " está menor que ";
+									if(r.getX() > temp) {
+										try {
+											r.getCliente().notificar(new Message(msg + r.getX()));
+										} catch (RemoteException e) {
+											e.printStackTrace();
+										}
 									}
-								}
-								break;
-							case INTERVALO:
-								msg += " está entre " + r.getX() + " e " + r.getY();
-								if(r.getX() > temp && r.getY() < temp) {
-									try {
-										r.getCliente().notificar(new Message(msg));
-									} catch (RemoteException e) {
-										e.printStackTrace();
+									break;
+								case INTERVALO:
+									msg += " está entre " + r.getX() + " e " + r.getY();
+									int maiorTemp = Math.max(r.getX(), r.getY());
+									int menorTemp = Math.min(r.getX(), r.getY());
+									if(maiorTemp > temp && menorTemp < temp) {
+										try {
+											r.getCliente().notificar(new Message(msg));
+										} catch (RemoteException e) {
+											e.printStackTrace();
+										}
 									}
+									break;
 								}
-								break;
 							}
+						}
+						
+						
+						try {
+							Thread.sleep(15 * 1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
 						}
 					}
 					
-					
-					try {
-						Thread.sleep(15 * 1000);
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
 				}
 				
 			}
-			
 		}
+	
 	}
-
-}

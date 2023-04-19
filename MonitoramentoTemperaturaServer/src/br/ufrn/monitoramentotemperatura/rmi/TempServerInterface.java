@@ -8,5 +8,5 @@ import br.ufrn.monitoramentotemperatura.model.Request;
 
 public interface TempServerInterface extends Remote {
 	public void consultarTemperatura(TempClientInterface cliente) throws RemoteException;
-	public void request(Request req) throws RemoteException;
+	public void monitorarTemperatura(Request req) throws RemoteException;
 }
